@@ -13,31 +13,36 @@ module Tumiki
     include ActionView::Helpers::OutputSafetyHelper
     include ActionView::Helpers::FormOptionsHelper
     include ActionView::RoutingUrlFor
-    attr_reader :symbol,:label,:as,:order, :comment, :option,:controller, :path
-    attr_reader :help, :td_option, :text_size,:domain, :params, :asc
-    attr_accessor :edit_on_table, :editable, :klass
-    attr_reader :help, :comment,:tr_option
+
+    attr_reader :symbol,:label, :comment, :params
+    AttrReader =
+      [:as,:order, :option,:controller, :path ,
+       :td_option, :text_size,:domain, :asc,
+       :editable,:edit_on_table ,:order,:align,
+       :help, :comment,:tr_option, :td_option,:text_size
+      ]
+    AttrAccessor = [ :edit_on_table, :editable, :klass ]
     
+    attr_reader *AttrReader
+    attr_accessor *AttrAccessor
     
     KlassModules = { date_time: KlassDateTime }
     AsModules = { select: AsSelect, checkbox: AsCheckbox, radio: AsRadio,
                   area:   AsArea, hidden: AsHidden}
     
     def initialize controller,domain, symbol,params,args = {}
-      @comment    = args.delete(:comment)
-      @help       = args.delete(:help)
-      @controller = controller
-      @params     = params
-      @symbol     = symbol
-      @label      = args.delete(:label) || @symbol.to_s
-      @as         = args.delete(:as)    || :text
-      @td_option  = args.delete(:td_option) || {}
-      @text_size  = args.delete(:text_size) || 15
-      @editable   = args.delete(:editable)
-      @edit_on_table = args.delete(:edit_on_table )
-      @tr_option = args.delete(:tr_option)
-      @domain = domain      
-      @order  = args.delete(:order)
+      @controller, @domain, @symbol, @params =
+                                     controller, domain, symbol, params
+      AttrReader.each{|sym|
+        instance_variable_set("@#{sym}", args.delete(sym) )
+      }
+      AttrAccessor.each{|sym|
+        instance_variable_set("@#{sym}", args.delete(sym) )
+      }
+      @label      ||=  @symbol.to_s
+      @as         ||=  :text
+      @td_option  ||=  {}
+      @text_size  ||=  15
       action  = args.delete(:action)
       
       if @order
@@ -48,9 +53,9 @@ module Tumiki
       
       @option = args
 
-      if a = @option.delete(:align)
+      if align = @option.delete(:align)
         @td_option[:class] ||= []
-        @td_option[:class] << "text-#{a}"
+        @td_option[:class] << "text-#{align}"
       end
       # 値のインスタンスの ruby class によって特別扱いが必用なときの措置
       # 例えば :date_time のときに　fmt%value では駄目だなぁ、、、とか
