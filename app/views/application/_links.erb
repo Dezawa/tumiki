@@ -1,0 +1,32 @@
+<div id="<%= @headerArea || 'headerArea'%>">
+<%   names_free     =
+     [["MSDN Top","/"],["線形計画法","/lips/calc"],["複式簿記","/book/keeping"],
+      ["太陽光発電","/sola/dayly/show_graph"],["勤務割付","/hospital"]
+     ]
+     names_login    = [["ログイン","/users/sign_in"]]
+     names_loggedin = []
+     names_logout   = [["ログアウト","/users/sign_out",{method: :delete}],["パスワード変更","/change_password"]]
+      begin ;@login = current_user;rescue ;@login=nil;end
+urls  = %w(/lips/free /lips/calc /login /logout /change_password)
+      names = %w(線形計画法(無償版) 線形計画法(会員版) ログイン ログアウト パスワード変更).zip(urls)
+
+      if @login #&& @login.login != "guest"
+        if option=@login.user_options.sort_by{|o| o.order
+	}.select{|opt| opt.order>0}.map{|opt| [opt.label,opt.url]}
+          names = names_free + names_loggedin + option + names_logout
+        end
+      else
+        names =  names_free +  names_login
+      end
+      
+-%>
+<table class="menuline_color" border=1 bordercolor="#FFFFFF" width="100%" ><tr class="menuline"><td bgcolor=#e0d0Ff>
+<table border=1 cellspacing=0><tr class="menuline">
+   <% names.each{|name,url,opt| -%>
+   <td width="90" align="center"  class='link_bg menuline_color'><font size=1><%= link_to_unless_current(name,url) %></td> <% } %>
+<%- if @Links %> <%= links_table  @Links %>
+</table></td></tr></table>
+<% else %>
+</table></td></tr></table>
+<% end %>
+</div>

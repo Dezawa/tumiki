@@ -1,0 +1,9 @@
+<%#  -*- coding: utf-8 -*- %>
+<h3><%= @TITLE %> 作成</h3>
+ <%= @model.errors.full_messages.join %>
+ <%=    form_tag(:action => :create)+submit_tag('作成') %>
+ <%= render partial: "edit_table" %>
+</form>
+<br />
+<hr>
+<%= (@PostMessage||"").html_safe %>

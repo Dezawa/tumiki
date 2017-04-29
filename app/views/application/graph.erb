@@ -1,0 +1,20 @@
+<h3><%= @TITLE %>　<%= @TITLE_post %></h3>
+<%-
+   opt = if @graph_path
+   {action: :show_img,
+   graph_path: @graph_path,
+   graph_format: @graph_format||"jpeg" 
+   }
+   else
+   {action: :show_img,
+   graph_format: @graph_format||"jpeg" ,
+   graph_file: @graph_file ||  "image.jpeg",
+   graph_file_dir: @graph_file_dir ||  (Rails.root + "tmp" + "img").to_s
+   }
+   end
+%>
+<%= render  partial: "graph_opt" %>
+<table><tr><td>
+<img src='<%= url_for( opt) %>' >
+</td><td><%= @comment ? @comment.html_safe : "" %></td></tr>
+</table>

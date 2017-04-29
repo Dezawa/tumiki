@@ -1,0 +1,13 @@
+<h3><%= @TITLE  %> 一覧 <%= @TITLE_post %></h3>
+    <%= render partial: "action_buttoms" %>
+<div id="head-body">
+<%= will_page = pagenation @models %>
+  <table border=1 class="nowrap">
+    <%= tumiki_index_table_header(@columns) %>
+    <%= tumiki_index_table_body( @columns, @models) %>
+  </table>
+</div>
+<%= render partial: "post_index" %>
+<% if !@edit_on_table %>
+</form>
+<% end %>

@@ -1,0 +1,45 @@
+<div class="row">
+  <%# Title + 顧客名 行%>
+  <h3>顧客詳細 <%= @TITLE %>　
+  <%= @model.id %>:<%= @model.number %>:<%= @model.name1 %>
+  </h3>
+  
+  <div class="col-xs-5">
+    <%# 顧客編集などの アクションボタン %>
+       <%= link_to('顧客編集',"/customers/#{@customer.id}/edit",{ :controller =>:customer, :action => :edit,:id => @customer.id , :class => 'btn btn-primary btn-xs' }.merge(select_params),
+                            ) %>
+       <% url = @referer ? @referer : {action: :index}.merge(select_params([:id])) %>
+       <%= link_to('戻る',url, class: "btn btn-info btn-xs")  %>
+      <%# 請求書発行や絞り込み %>
+      <%= link_to('受注',"/orders/new?customer_id=#{@customer.id}",
+                   class: "btn btn-warning btn-xs") unless @new  %>
+      <% unless @create %>
+        <%= re_bill @customer  %>
+        <%= colect_slip @account %>
+        <%= income_if_bill_of_this_month %>
+        <%= server_history  @customer %>
+      <% end %>
+      <%= googlmap @customer.address %>
+    </div>
+  <div class="col-xs-7">
+    <%= form_tag("/customers",method: :get) {
+       inquiry( @buttm_condition ) +
+       hidden_field_tag("selection[hole]",true)
+      } %>
+  </div>
+</div>
+<div class="container">
+  <div class="row">
+    <div class="col-xs-4">
+      <%= nav_tabs_by_labels @tag_main  %>
+      <%= nav_content_by_labels @tag_main  %>
+    </div>
+    <div class="col-xs-8">
+      <%= nav_tabs_by_labels @tab_array  %>
+      <%= nav_content_by_labels @tab_array  %>
+      
+    </div>
+  </div>
+</div>
+<br />
+<hr>

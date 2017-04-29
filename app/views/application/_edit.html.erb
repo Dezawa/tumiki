@@ -1,0 +1,13 @@
+<h3><%= @TITLE %> 編集</h3>
+<%= form_for(@model) do |f| %>
+<%= hidden_field_tag "page",@page %>
+  <%= error_messages_for @model%>
+  <%= f.submit '更新' %>
+   <%= render partial: "edit_table" %>
+<%= hidden_field_tag(:back,@back) if @back %>
+<%= hidden_field_tag(:back_params,@back_params) if @back_params %>
+<% end %>
+<br />
+<hr>
+<%= @PostMessage.html_safe %>
+ 
