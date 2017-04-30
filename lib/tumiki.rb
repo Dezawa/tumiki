@@ -422,6 +422,9 @@ module Tumiki
     }.compact
   end
 
+  def permit_params
+    params[@Domain].permit permit_attrs
+  end
   #
   
   NextAsc =

@@ -18,7 +18,7 @@ module Tumiki
     AttrReader =
       [:as,:order, :option, :path ,
        :td_option, :text_size, :asc,
-       :editable,:edit_on_table ,:order,:align,
+       :edit_on_table ,:order,:align,
        :help, :comment,:tr_option, :td_option,:text_size
       ]
     AttrAccessor = [ :edit_on_table, :editable, :klass ]
@@ -162,9 +162,14 @@ module Tumiki
     end
     
     def edit(model,with_id=nil)
-      text_field_tag name(model,with_id),
-                     to_s_by_format(model),
-                     {style: "width:#{text_size}0px;", class: klass}
+      pp [ symbol,editable?(model), editable]
+      unless editable?(model)
+        disp(model)
+      else
+        text_field_tag name(model,with_id),
+                       to_s_by_format(model),
+                       {style: "width:#{text_size}0px;", class: klass}
+      end
     end
 
     def disp(model)

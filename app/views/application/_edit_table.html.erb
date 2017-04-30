@@ -1,8 +1,8 @@
 <table border=1>
-<% id = @model.id -%>
+<%= hidden_field_tag :id, @model.id -%>
 <% @columns.each{|column| -%>
 <tr><td><%= column.label %><%=link_with_help("",column.help) %></td>
- <td><%= column.edit_field @model %></td>
+ <td><%= column.edit @model %></td>
  <td><%= column.comment.html_safe if column.comment %></td>
 </tr><% } -%>
 </table>
