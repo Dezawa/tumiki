@@ -14,10 +14,10 @@ module Tumiki
     include ActionView::Helpers::FormOptionsHelper
     include ActionView::RoutingUrlFor
 
-    attr_reader :symbol,:label, :comment, :params
+    attr_reader :symbol, :comment, :params,:controller,:domain
     AttrReader =
-      [:as,:order, :option,:controller, :path ,
-       :td_option, :text_size,:domain, :asc,
+      [:as,:order, :option, :path ,
+       :td_option, :text_size, :asc,
        :editable,:edit_on_table ,:order,:align,
        :help, :comment,:tr_option, :td_option,:text_size
       ]
@@ -33,13 +33,14 @@ module Tumiki
     def initialize controller,domain, symbol,params,args = {}
       @controller, @domain, @symbol, @params =
                                      controller, domain, symbol, params
+
       AttrReader.each{|sym|
         instance_variable_set("@#{sym}", args.delete(sym) )
       }
       AttrAccessor.each{|sym|
         instance_variable_set("@#{sym}", args.delete(sym) )
       }
-      @label      ||=  @symbol.to_s
+      @label      =   args.delete(:label) #@symbol.to_s
       @as         ||=  :text
       @td_option  ||=  {}
       @text_size  ||=  15
@@ -65,6 +66,13 @@ module Tumiki
       extend AsModules[as] if  AsModules[as]
     end
 
+    def label
+      @label || symbol.to_s.classify
+    end
+
+    def label_for
+      ActionView::Helpers::FormHelper.label domain,symbol,@label
+    end
     # AscIcon = { "" => "glyphicon glyphicon-sort",
     #             "desc" => "glyphicon glyphicon-sort-by-attributes-alt",
     #             "asc"  => "glyphicon glyphicon-sort-by-attributes"}
