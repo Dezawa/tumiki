@@ -60,7 +60,6 @@ module Tumiki
                 sub(/Controller/,(action ? "_#{action}_path" : "_path")).
                 downcase
       end
-      
       @option = args
 
       if align

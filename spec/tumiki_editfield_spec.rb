@@ -130,7 +130,7 @@ RSpec.describe Tumiki, :type => :controller do
     
   end
   ### Select ここまで ###
-  
+
   describe "to_sを返すケース:editable=false" do
     before do
       (0..6).each {|clm| @controller.columns[clm].editable = false }

@@ -206,10 +206,6 @@ module Tumiki
     columns = arg_columns ? arg_columns : ( @columns ||=  [] )
     args[ :edit_on_table ] ||= @edit_on_table
     columns << Column.new( self, @Domain, symbol,params,args)
-    # else
-    #   @columns ||=  []
-    #   @columns << Column.new( self, symbol,params,args)
-    # end
   end
 
   # preset :: 初期の内容　{ symbol: value }
