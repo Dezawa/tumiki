@@ -19,7 +19,7 @@ module Tumiki
 
     attr_reader :symbol, :comment, :params,:controller,:domain
     AttrReader =
-      [:label, :as, :text, :edit_on_table, :link,  # 表示方法に関わる option
+      [:label, :as, :text,  :link,  # 表示方法に関わる option
        :format, :text_size,:align,  # 表示形式に関わる option
        :order,                      # indexの時のカラムソート関連
        :correction, :include_blank, # as: :radio, :select の関連
