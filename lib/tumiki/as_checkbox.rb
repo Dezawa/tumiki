@@ -1,27 +1,40 @@
 # coding: utf-8
 module Tumiki
   module AsCheckbox
+    # checkboxの右に表示する文字列
+    # cprrection で決める
     # □可/否 という表示
-    def edit(model,with_id=nil)
+    def edit_(model,with_id=nil)
       edit_or_disp(model,with_id,false)
     end
     def disp(model)
       edit_or_disp(model,nil,true)
     end
 
+    # correctionが
+    #  無い :: value=1 でlabelなし
+    #  1次元 :: value = label として扱う
+    #  2次元 :: labelを□の後に続ける
+    #  要素が二つ以上の場合はまだ実装していない
     def edit_or_disp(model,with_id,bool)
-      correction =
-        case option[:correction]
-        when nil ; [["可",true],["否",false]]
-        when true ; []
-        when :check_only ;[[nil,1],[nil,0]]
-        else ; option[:correction]
+      return correction_to_value(model) if text && correction.blank?
+      
+      valu_key =
+        if correction.blank? ; [["","1"]]
+        else                 ;  correction     
         end
-      value,key = correction.empty? ? ["",true] : correction.first
+ 
+        # case correction
+        # when nil ; []
+        # when true ; []
+        # when :check_only ;[[nil,1],[nil,0]]
+        # else ; option[:correction]
+        # end
+      value,key = valu_key.first
       safe_join([check_box_tag( name(model,with_id), key,
                                 model.send(symbol) == key,
                                 disabled:  bool),
-                 correction.map{|v,k| v}.compact.join("/")
+                 valu_key.map{|v,k| v}.compact.join("/")
                 ])
     end
       
