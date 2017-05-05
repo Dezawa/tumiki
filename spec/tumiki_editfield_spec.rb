@@ -22,6 +22,115 @@ RSpec.describe Tumiki, :type => :controller do
     @controller.index_columns
     @block = BlockDumy.new(BlockArgs)
   end
+  
+  ### Select ##
+  describe "Select" do
+    describe "as があるが text: true" do
+      before do
+        [5,6].each{|c| @controller.columns[c].text = true }
+      end
+      it "select" do
+        @block.col1 = 1 #1
+        expect(@controller.columns[5].edit_field(@block)).to eq 'select1'
+      end
+      it "radio correction=>[val,val]" do
+        @block.col1 = "select1" #1
+        expect(@controller.columns[6].edit_field(@block)).to eq 'select1'
+      end
+    end
+    
+    it 'edit select 初期値なし' do
+      expect(@controller.columns[5].edit_field(@block)).
+        to eq SelectFormEnableWithID%[0,"",1]
+    end
+    it 'edit select 初期値 1' do
+      @block.col1 = 1
+      expect(@controller.columns[5].edit_field(@block)).
+        to eq SelectFormEnableWithID%[0,'selected="selected" ',1]
+    end
+    
+    describe "@edit_on_table == :on_cell" do
+      before do
+        [5,6].each{|c| @controller.columns[c].edit_on_table = :on_cell}
+      end
+      describe "editable? is true" do
+        before do
+          [5,6].each{|c| @controller.columns[c].editable = true }
+        end
+        it 'edit select 初期値なし select' do
+          expect(diff(@controller.columns[5].edit_field(@block).split,
+                      (SelectFormDisabledWithID%[0, "",1]).split
+                     )).to eq [[],[]]
+        end
+        it 'edit select 初期値 select1 editable select' do
+          @block.col1="select1"
+          expect(diff(@controller.columns[5].edit_field(@block).split,
+                      (SelectFormDisabledWithID%[0,'', 1]).split
+                     )).to eq [[],[]]
+        end
+      end
+      describe "editable? is false" do
+        before do
+          [3,4,5,6].each{|c| @controller.columns[c].editable = false }
+        end
+        it 'edit select 初期値なし select' do
+          expect(diff(@controller.columns[5].edit_field(@block).split,
+                      (SelectFormDisabledWithID%[0, "",1]).split
+                     )).to eq [[],[]]
+        end
+        
+        it 'edit select 初期値 select1 editable select' do
+          @block.col1="select1"
+          expect(diff(@controller.columns[5].edit_field(@block).split,
+                      (SelectFormDisabledWithID%[0,'', 1]).split
+                     )).to eq [[],[]]
+        end
+        
+      end
+
+    end
+    describe "@edit_on_table == :editting" do
+      before do
+        [3,4,5,6,7].each{|c| @controller.columns[c].edit_on_table = :editting }
+      end
+      describe "editable? is true" do
+        before do
+          [3,4,5,6,7].each{|c| @controller.columns[c].editable = true }
+        end
+        it 'edit select 初期値なし select' do
+          expect(diff(@controller.columns[5].edit_field(@block).split,
+                      (SelectFormEnableWithID%[0, "",1]).split
+                     )).to eq [[],[]]
+        end
+        it 'edit select 初期値 select1 editable select' do
+          @block.col1="select1"
+            expect(diff(@controller.columns[5].edit_field(@block).split,
+                        (SelectFormEnableWithID%[0,'', 1]).split
+                       )).to eq [[],[]]
+        end
+      end
+      describe "editable? is false" do
+        before do
+          [3,4,5,6,7].each{|c| @controller.columns[c].editable = false }
+        end
+        it 'edit select 初期値なし select' do
+          expect(diff(@controller.columns[5].edit_field(@block).split,
+                      (SelectFormDisabledWithID%[0, "",1]).split
+                     )).to eq [[],[]]
+        end
+        it 'edit select 初期値 select1 editable select' do
+          @block.col1="select1"
+          expect(diff(@controller.columns[5].edit_field(@block).split,
+                      (SelectFormDisabledWithID%[0,'', 1]).split
+                     )).to eq [[],[]]
+        end
+        
+      end
+    end
+    
+  end
+  ### Select ここまで ###
+  
   describe "to_sを返すケース:editable=false" do
     before do
       (0..6).each {|clm| @controller.columns[clm].editable = false }
@@ -38,7 +147,7 @@ RSpec.describe Tumiki, :type => :controller do
     end
     describe "as があるが text: true" do
       before do
-        [3,4,5,6].each{|c| @controller.columns[c].text = true }
+        [3,4].each{|c| @controller.columns[c].text = true }
       end
 
       it "radio correction=>[label,idx]" do
@@ -48,14 +157,6 @@ RSpec.describe Tumiki, :type => :controller do
       it "radio correction=>[val,val]" do
         @block.col1 = "radio1" #1
         expect(@controller.columns[4].edit_field(@block)).to eq 'radio1'
-      end
-      it "select" do
-        @block.col1 = 1 #1
-        expect(@controller.columns[5].edit_field(@block)).to eq 'select1'
-      end
-      it "radio correction=>[val,val]" do
-        @block.col1 = "select1" #1
-        expect(@controller.columns[6].edit_field(@block)).to eq 'select1'
       end
     end
   end
@@ -95,18 +196,6 @@ RSpec.describe Tumiki, :type => :controller do
       end
     end
     
-    describe "Select" do
-      it 'edit select 初期値なし' do
-        expect(@controller.columns[5].edit_field(@block)).
-          to eq SelectFormEnableWithID%[0,"",1]
-      end
-      it 'edit select 初期値 1' do
-        @block.col1 = 1
-        expect(@controller.columns[5].edit_field(@block)).
-          to eq SelectFormEnableWithID%[0,'selected="selected" ',1]
-      end
-    end
-    
     describe "@edit_on_table == :on_cell" do
       before do
         [3,4,5,6,7].each{|c| @controller.columns[c].edit_on_table = :on_cell}
@@ -121,24 +210,12 @@ RSpec.describe Tumiki, :type => :controller do
                       (RadioFormDisabledWithID%[0,0,0, 0,1,1,"",1,1]).split
                      )).to eq [[],[]]
         end
-        it 'edit select 初期値なし select' do
-          expect(diff(@controller.columns[5].edit_field(@block).split,
-                      (SelectFormDisabledWithID%[0, "",1]).split
-                     )).to eq [[],[]]
-        end
         it 'edit select 初期値 select1 editable radio' do
           @block.col1 = 1
           expect(diff(@controller.columns[3].edit_field(@block).split,
                       (RadioFormDisabledWithID%[0,0,0, 0,1,1,"checked=\"checked\"",1,1]).split
                      )).to eq [[],[]]
         end
-        it 'edit select 初期値 select1 editable select' do
-          @block.col1="select1"
-          expect(diff(@controller.columns[5].edit_field(@block).split,
-                      (SelectFormDisabledWithID%[0,'', 1]).split
-                     )).to eq [[],[]]
-        end
-        
         it 'edit select 初期値 select1 空白可能' do
           @block = BlockDumy.
                    new(BlockArgs.merge(col1: "select1",editable: true))
@@ -157,24 +234,12 @@ RSpec.describe Tumiki, :type => :controller do
                       (RadioFormDisabledWithID%[0,0,0, 0,1,1,"",1,1]).split
                      )).to eq [[],[]]
         end
-        it 'edit select 初期値なし select' do
-          expect(diff(@controller.columns[5].edit_field(@block).split,
-                      (SelectFormDisabledWithID%[0, "",1]).split
-                     )).to eq [[],[]]
-        end
         it 'edit select 初期値 select1 editable radio' do
           @block.col1 = 1
           expect(diff(@controller.columns[3].edit_field(@block).split,
                       (RadioFormDisabledWithID%[0,0, 0, 0,1,1,"checked=\"checked\"",1,1]).split
                      )).to eq [[],[]]
         end
-        it 'edit select 初期値 select1 editable select' do
-          @block.col1="select1"
-          expect(diff(@controller.columns[5].edit_field(@block).split,
-                      (SelectFormDisabledWithID%[0,'', 1]).split
-                     )).to eq [[],[]]
-        end
-        
         it 'edit select 初期値 select1 空白可能' do
           @block = BlockDumy.
                    new(BlockArgs.merge(col1: "select1",editable: true))
@@ -199,24 +264,12 @@ RSpec.describe Tumiki, :type => :controller do
                       (RadioFormEnableWithID%[0,0, 0, 0,1,1,"",1,1]).split
                      )).to eq [[],[]]
         end
-        it 'edit select 初期値なし select' do
-          expect(diff(@controller.columns[5].edit_field(@block).split,
-                      (SelectFormEnableWithID%[0, "",1]).split
-                     )).to eq [[],[]]
-        end
         it 'edit select 初期値 select1 editable radio' do
           @block.col1 = 1
           expect(diff(@controller.columns[3].edit_field(@block).split,
                       (RadioFormEnableWithID%[0,0, 0, 0,1,1,"checked=\"checked\"",1,1]).split
                      )).to eq [[],[]]
         end
-        it 'edit select 初期値 select1 editable select' do
-          @block.col1="select1"
-            expect(diff(@controller.columns[5].edit_field(@block).split,
-                        (SelectFormEnableWithID%[0,'', 1]).split
-                       )).to eq [[],[]]
-        end
-        
         it 'edit select 初期値 select1 空白可能' do
           @block = BlockDumy.
                    new(BlockArgs.merge(col1: "select1",editable: true))
@@ -238,24 +291,12 @@ RSpec.describe Tumiki, :type => :controller do
                       (RadioFormDisabledWithID%[0,0, 0, 0,1,1,"",1,1]).split
                      )).to eq [[],[]]
         end
-        it 'edit select 初期値なし select' do
-          expect(diff(@controller.columns[5].edit_field(@block).split,
-                      (SelectFormDisabledWithID%[0, "",1]).split
-                     )).to eq [[],[]]
-        end
         it 'edit select 初期値 select1 editable radio' do
           @block.col1 = 1
           expect(diff(@controller.columns[3].edit_field(@block).split,
                       (RadioFormDisabledWithID%[0,0, 0, 0,1,1,"checked=\"checked\"",1,1,1]).split
                      )).to eq [[],[]]
         end
-        it 'edit select 初期値 select1 editable select' do
-          @block.col1="select1"
-          expect(diff(@controller.columns[5].edit_field(@block).split,
-                      (SelectFormDisabledWithID%[0,'', 1]).split
-                     )).to eq [[],[]]
-        end
-        
         it 'edit select 初期値 select1 空白可能' do
           @block = BlockDumy.
                    new(BlockArgs.merge(col1: "select1"))
