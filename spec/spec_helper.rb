@@ -92,7 +92,7 @@ checkbox = "<input type=\"checkbox\" name=\"block#ID#[col1]\" id=\"block_#id#col
 
 Checked = 'checked="checked" '
 NotChecked = ""
-CheckBoxDisabled = (checkbox + "disabled=\"disabled\" %s/>").gsub(/#ID#/,"").gsub(/#id#/,"123_")
+CheckBoxDisabled = (checkbox + "disabled=\"disabled\" %s/>").gsub(/#ID#/,"").gsub(/#id#/,"")
 CheckBoxEnable = (checkbox + "%s/>").gsub(/#ID#/,"").gsub(/#id#/,"")
 CheckBoxDisabledWithID = (checkbox + "disabled=\"disabled\" %s/>").gsub(/#ID#/,"[123]").gsub(/#id#/,"123_")
 CheckBoxEnableWithID = (checkbox + "%s/>").gsub(/#ID#/,"[123]").gsub(/#id#/,"123_")
