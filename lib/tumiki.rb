@@ -388,7 +388,7 @@ module Tumiki
   end
   
   def new_models
-    models = @add_no.times.map{ model_class.new(@NewModel) }
+    models = @add_no.times.map{ @Model.new(@NewModel) }
     models.each_with_index{|model,id| model.id = -id}
     models
   end
@@ -439,9 +439,9 @@ module Tumiki
   def index_relation
     # model_class.pagenate(params[:page])
     if @FindWhere
-      model_class.where(@FindWhere)
+      @Model.where(@FindWhere)
     else
-      model_class.all
+      @Model.all
     end
   end
 
@@ -450,7 +450,7 @@ module Tumiki
     model_hash = params[:data] # {"deny_ip"=>{"1"=>{"deny"=>"true"}}}
     key = params[:data].keys.first #"deny_ip"
     id = model_hash[key].keys.first  # {"1"=>{"deny"=>"true"}}
-    model = model_class.find(id)
+    model = @Model.find(id)
     model.update( model_hash[key][id].permit(permit_attrs))
     render json: true
   end
@@ -511,15 +511,12 @@ module Tumiki
      #@ModelPathBase::モデル名から作成。show,editなどのroute。 tumiki/sample_path
      #@CorrectionPath::モデル名から作成。indexなどのroute。 tumiki/samples_path
      def tumiki_instanse_variable
-       begin
-         @Model = eval(self.class.name.sub(/s?Controller/,""))
-         plural = ActiveModel::Naming.plural @Model
-         @Domain = plural.singularize
-         @ModelPathBase  = @Domain+"_path"
-         @CorrectionPath = plural+"_path"
-       rescue NameError
-         @Model = ""
-       end
+       model_class
+       @Model = eval(self.class.name.sub(/s?Controller/,""))
+       plural = ActiveModel::Naming.plural @Model
+       @Domain = plural.singularize
+       @ModelPathBase  = @Domain+"_path"
+       @CorrectionPath = plural+"_path"
      end
      #extend self
    end
