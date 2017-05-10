@@ -32,7 +32,7 @@ module Tumiki
         # end
       value,key = valu_key.first
       safe_join([check_box_tag( name(model,with_id), key,
-                                model.send(symbol) == key,
+                                model.send(symbol) == key||model.send(symbol).to_s == key,
                                 disabled:  bool),
                  valu_key.map{|v,k| v}.compact.join("/")
                 ])
