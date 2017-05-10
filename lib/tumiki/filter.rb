@@ -7,6 +7,11 @@ module Tumiki
     include ActionView::Helpers::OutputSafetyHelper
     include ActionView::Helpers::FormOptionsHelper
 
+    #絞り込みのための条件を作って返す。
+    #  where(Filter.find_query(@filter_list))
+    #の様に用いる。
+    #
+    #filter_list :: Tumiki#filter で作成された絞り込み条件の配列
     def self.find_query filter_list
       return nil unless filter_list
       arels = filter_list.map{|filt| filt.to_arel}.compact
@@ -14,7 +19,29 @@ module Tumiki
       arel = arels.shift
       arels.inject(arel){|sum,arg| sum.and arg }
     end
-    
+
+    #=== Usage
+    #module Tumiki#filter に定義された
+    # def filter symbol,preset={},args={}
+    #を通して使われる。
+    #
+    #model :: 検索対象となる Active Recode model
+    #
+    #symbol :: 検索条件を設定するcolumn
+    #
+    #preset :: 検索条件を保存しているhash。
+    #          構造は { symbol => {:vlue => 値, :type => 一致,前方,含む,後方}}
+    #
+    #args :: :label,:as,:collection,:query_type,:klass
+    #label :: 検索条件を入力するinputの前に表示される文字列。なければsymbolを使う
+    #
+    #as :: 検索条件を入力するinputの型。radio, :select, :match
+    #      radio,selectはそのtypeのinputとなる。matchはダミーで、一致,前方,含む,後方以外の目的で使う場合に用いる。例えば範囲の片方とか。
+    #collection :: radio、selectの場合の選択肢
+    #
+    #query_type :: 一致,前方,含む,後方のいずれかに固定する場合に指定
+    #
+    #klass :: inputのCSSのclassに追加される
     def initialize model,symbol,preset,args = {}
       @model = model
       @symbol = symbol
@@ -54,7 +81,10 @@ module Tumiki
     end
 
     FormQueryType = ["含む", "一致", "前方", "後方"]
-      #[["含む"], ["一致"], ["前方"], ["後方"]]
+    #[["含む"], ["一致"], ["前方"], ["後方"]]
+    
+    #絞り込み条件を"含む", "一致", "前方", "後方"から選ぶselectを表示する
+    #as が :radio, :select, :match の場合は表示不要なので空文字列
     def disp_query_type_select
       case as
       when :radio, :select ;" "

@@ -1,213 +1,279 @@
 # coding: utf-8
 require "tumiki/version"
- require 'tumiki/column'
- require 'tumiki/filter'
- require 'tumiki/query'
-# require 'tumiki/helper'
-# = index を実装するビルダーもどき
-# == 環境他
-# === Tumiki をcontrollerにincludeして使う
-#  以下が必要なfile
-#   app/controllers/concerns/tumiki.rb
-#   app/controllers/concerns/tumiki/*
-#   app/helpers/tumiki_helper.rb
-#   app/assets/javascripts/tumiki.coffee
+require 'tumiki/column'
+require 'tumiki/filter'
+require 'tumiki/query'
 #
-# === GEM
-#  Bootstrapを想定しているが必須ではない。
-#  カラムソートの↑↓表示にBootstrapのglyphiconを使っているので、
-#  Bootstrapが無い場合はその表示は出ない
+#TumikiはView、controllerの実装を助けるためのRailsのためのパッケージです。
 #
-# == 何ができるか
-# === <table>形式のindexのカラムの指定ができる
-# === <th> は attribute名、指定した文字列、もしくは ソートへのlinkとなる
-# === <td> は defaultは to_s。
+#== 何ができるか
+#1. indexでのtable、columnソート、絞り込みの実装を助けます
+#
+#1. table上でデータを編集する手段を提供します。(OnTabelEdit, OnCellEdit)
+#
+#1. index,show,edit のシンプルなview(views/application)とそのためのcontroller(application_controllerにincludeされるmodule Tumiki)を用意してあるので管理画面的なものはcolumnの定義だけでcodeなしで実装できます
+#
+#1. シンプルとは言え、カラムソート、絞り込み、css-class指定による装飾ができます。
+#
+#== INSTALL
+#1. Gem
+#Gemfileに以下を追加し、bundle install する。
+#カラムソートのソート方向表示のためにfont-awesomeを使うのでそれも入れる。
+#  gem 'tumiki' , github: 'Dezawa/tumiki'
+#  gem 'font-awesome-rails'
+#
+#2. rake install
+#  rails g tumiki:install
+#これにより、以下がおこなわれます
+#
+#* file copy
+#Tumikiの実行にあるとよい、views/application/*.html.erb、app/assets/ が
+#copyされます。同名のfileがあると上書きされます。(いずれも tumiki_ で始まります)
+#
+#* fileの編集
+#
+#application_controller.rbに以下が追加されます
+#  include Tumiki::ApplicationControllerExtensionTumiki
+#  before_filter :tumiki_instanse_variable
+#
+#application_helper.rbに以下が追加されます
+#  require 'tumiki/helper'
+#  module ApplicationHelper
+#    include Tumiki::Helper
+#
+#== USAGE
+#=== Controller
+#表示する項目をmethod #columnで定義する。index, show などでの表示順は
+#定義順である
+#  def index_columns
+#    column :id
+#    column :name ,label: "名前"
+#    column :admin   ,as: :checkbox, correction: %w(管理者)
+#    column :section ,as: :select, correction: %w(総務 経理)
+#    column :section ,as: :select, correction: [["総務",1],["経理",2]]
+#    column :section ,as: :radio, correction: [["総務",1],["経理",2]]
+#    column :section ,editable: false, link: lambda{|m| section_path m}
+#  end
+#
+#定義はArray @columnsに入る。これ以外に入れたい場合はoptional paramaterで指定する
+#  def index_columns
+#    @kolumns = []
+#    column :id, {},@kolumns
+#    column :name ,{label: "名前"},@kolumns
+#  end
+#    
+#action show,edit,newの場合は次の順で探される
+#- show : show_columns -> index_columns
+#- new : new_columns -> edit_columns -> show_columns -> index_columns 
+#- edit : new_columns -> edit_columns -> show_columns -> index_columns 
+#
+#table上で編集する edit_on_table, レコード追加＋編集する add_on_tableの場合は
+#index_columns を用いる。
+#
+#これらを定義せず、それぞれのactionの中でcolumnを定義しても良い。
+#
+#=== View
+#Tumiki標準のvonntrollerでは、modelのcorrenctionは @models、@modelに格納されて
+#viewに渡される
+#
+#==== viewで使うmethod
+#class Tumiki::Column のmethod。#label , #disp , #edit , #edit_field 
+#
+#=== <th> は attribute名、指定した文字列、もしくは ソートへのlinkとなる
+#=== <td> は defaultは to_s。
 #as optionにより、id(等)を表示用文字列に変換、checkbox、radioボタン、
 #もしくは何らかへの link とできる
 #
-# === OnTableEdit
-# tableで一覧表示して、編集を可能にすることができる。
-#    mode無し :: クリックすると編集可能になる。cell毎に　model.updateする
-#    mode有り :: 全体を編集可能にしたり不可にしたり。teble全体をまとめてupdateする
+#=== OnTableEdit
+#tableで一覧表示して、編集を可能にすることができる。
+#mode無し :: クリックすると編集可能になる。cell毎に　model.updateする
+#mode有り :: 全体を編集可能にしたり不可にしたり。teble全体をまとめてupdateする
 #
-#    いずれも、カラム単位で編集可否を設定するが、さらに object毎の可否の設定も可能
+#いずれも、カラム単位で編集可否を設定するが、さらに object毎の可否の設定も可能
 #
-# == 使う上での制約
-# === 表示collectionの代入変数
-#   普通の使い方では、Model Userのcollection は @users に代入するが
+#== 使う上での制約
+#=== 表示collectionの代入変数
+#  普通の使い方では、Model Userのcollection は @users に代入するが
 #　　tumiki_helper.rb を使う場合は @models に代入する
-# 
-# === Controllerでのmethod の override
-# ==== tumiki_instanse_variable
-# Tumiki moduleやtumiki関連helperが使うインスタンス変数を定義している
-# ここの定義と異なる場合は、over ride が必要
-# @Model :: モデルが入る。controller名から　s?Controller を削除したものを定義している。
-# model名とcontrollerの対応が違っている場合、over rideする必要がある。
-# 
-# @Domain :: モデルをpluralしsingularizeする
-# @ModelPathBase :: edit_product_path などのpathを作成するときのbase。
-#  モデルをpluralしsingularizeする
 #
-# @CorrectionPath :: products_path などのpathを作成する。モデルをpluralする
-# 
-# ==== index_relation
-# index、edit_on_table で使う。
-# defulat では モデル.allを返している。
-# このあと order(order_params) がchainされて@modelsに correctionがしまわれる。
-# pageingや検索条件の設定を行ったmethodでover rideする
+#=== Controllerでのmethod の override
+#==== tumiki_instanse_variable
+#Tumiki moduleやtumiki関連helperが使うインスタンス変数を定義している
+#ここの定義と異なる場合は、over ride が必要
+#@Model :: モデルが入る。controller名から　s?Controller を削除したものを定義している。
+#model名とcontrollerの対応が違っている場合、over rideする必要がある。
 #
-# ==== permit_attrs
-# on_cell_edit や update_on_tableでのstrong_paramaterでつかう。
-# defaultは　[] 空。
+#@Domain :: モデルをpluralしsingularizeする
+#@ModelPathBase :: edit_product_path などのpathを作成するときのbase。
+# モデルをpluralしsingularizeする
 #
-# === カラムソートやlink、OnTableEdit を使う場合
-# * th,td tagにclass設定が必要なので、table出力には以下のいずれかの方法を使う
-# * modelessなOnTableEditを使う場合は tumiki.coffee が必要
-# 
-# ==== helpers/tumiki_helperを使う
-# tumiki_table :: <table><thead><th><tbody><tr><td> 全て出力する
-# tumiki_thead :: <thead><tr><th> を出力する
-# tumiki_th :: <th> を出力する
-# tumiki_tbody :: <tbody><tr><td>  を出力する
-# tumiki_tr :: tbodyの一行分を を出力する
-# tumiki_td :: tbodyの一cell分を を出力する
-# 
-# ==== Tumiki::Columnのmethodを使う
-# th :: columnのoptionに応じたclass等をつけたth-tag
-# header :: thタグ内に表示する文字列
-# header_with_th :: th-tagに包まれた header
-# disp_field :: columnのoptionに応じた修飾のついた表示データ
-# td :: columnのoptionに応じたclass等を付けたtd-tag
-# disp_field_with_td :: td-tagに包まれた表示データ
-# 
-# == カラムの指定のしかた
-# === TH のコントロール
+#@CorrectionPath :: products_path などのpathを作成する。モデルをpluralする
+#
+#==== index_relation
+#index、edit_on_table で使う。
+#defulat では モデル.allを返している。
+#このあと order(order_params) がchainされて@modelsに correctionがしまわれる。
+#pageingや検索条件の設定を行ったmethodでover rideする
+#
+#==== permit_attrs
+#on_cell_edit や update_on_tableでのstrong_paramaterでつかう。
+#defaultは　[] 空。
+#
+#=== カラムソートやlink、OnTableEdit を使う場合
+#* th,td tagにclass設定が必要なので、table出力には以下のいずれかの方法を使う
+#* modelessなOnTableEditを使う場合は tumiki.coffee が必要
+#
+#==== helpers/tumiki_helperを使う
+#tumiki_table :: <table><thead><th><tbody><tr><td> 全て出力する
+#tumiki_thead :: <thead><tr><th> を出力する
+#tumiki_th :: <th> を出力する
+#tumiki_tbody :: <tbody><tr><td>  を出力する
+#tumiki_tr :: tbodyの一行分を を出力する
+#tumiki_td :: tbodyの一cell分を を出力する
+#
+#==== Tumiki::Columnのmethodを使う
+#th :: columnのoptionに応じたclass等をつけたth-tag
+#header :: thタグ内に表示する文字列
+#header_with_th :: th-tagに包まれた header
+#disp_field :: columnのoptionに応じた修飾のついた表示データ
+#td :: columnのoptionに応じたclass等を付けたtd-tag
+#disp_field_with_td :: td-tagに包まれた表示データ
+#
+#== カラムの指定のしかた
+#=== TH のコントロール
 #　 column :name  :: "name"
-#   column :name, label: "名前" :: "名前"
-#   column :name, order: next_asc(:name)  :: <a href="/products?asc=desc&order=name"></a>
-#      orderを使う場合は、collectionの生成において Product.all.order(order_params)
-#      の様に、order(order_params)を入れる。
-#      @default_order に無指定時のorderを入れておくことができる
+#  column :name, label: "名前" :: "名前"
+#  column :name, order: next_asc(:name)  :: <a href="/products?asc=desc&order=name"></a>
+#     orderを使う場合は、collectionの生成において Product.all.order(order_params)
+#     の様に、order(order_params)を入れる。
+#     @default_order に無指定時のorderを入れておくことができる
 #
-# === TDのコントロール
-# ==== default
+#=== TDのコントロール
+#==== default
 #　 column :name :: model.send(:name).to_s が表示される
 #
-# ==== formatで修飾
+#==== formatで修飾
 #　 column :name,format: "名前は%s" :: format % val を表示
 #　 column :start_at, format: "%Y/%m/%d %H:%M" :: strftime をもつobjectの場合は　を表示
 #
-# ==== correctionで修飾
-# product_id → product.name の様な変換や、editable → 編集可可能/編集不可 の
-# 様な変換を行いたい場合
-#   column :enable ,  correction: [["可",true],["否",false]]
-#   column :product_id ,  correction: Product.pluck(:name,:id)
+#==== correctionで修飾
+#product_id → product.name の様な変換や、editable → 編集可可能/編集不可 の
+#様な変換を行いたい場合
+#  column :enable ,  correction: [["可",true],["否",false]]
+#  column :product_id ,  correction: Product.pluck(:name,:id)
 #
-# ==== as で修飾
-# disableな select, radio buttom, check box で表示する。
+#==== as で修飾
+#disableな select, radio buttom, check box で表示する。
 #
-# これらを使う場合は、correction も必要となる
-# * select :: column :enable , as: :select, correction: [["可",true],["否",false]]
-# * radio buttom :: column :enable, as: :radio, correction: [["可",true],["否",false]]
-# * check box :: column :enable, as: :checkbox, correction: [["可",true],["否",false]]
-# index table でのcheck box なので、1つだけしかサポートしていない。 bollean的な項目を想定
+#これらを使う場合は、correction も必要となる
+#* select :: column :enable , as: :select, correction: [["可",true],["否",false]]
+#* radio buttom :: column :enable, as: :radio, correction: [["可",true],["否",false]]
+#* check box :: column :enable, as: :checkbox, correction: [["可",true],["否",false]]
+#index table でのcheck box なので、1つだけしかサポートしていない。 bollean的な項目を想定
 #
-# ===== リンク
-# 自分へのlink, 関連へのlink などができる
-#  column :name, link: lambda{|m| product_path(m)} :: 自分へのlink
-#  column :maker_name, link: lambda{|m| maker_path(m.maker)} :: 関連へのlink
+#===== リンク
+#自分へのlink, 関連へのlink などができる
+# column :name, link: lambda{|m| product_path(m)} :: 自分へのlink
+# column :maker_name, link: lambda{|m| maker_path(m.maker)} :: 関連へのlink
 #
 #
-# == On Table Edit
-# index table のon cell で修正ができる。mode無しと mode有りがある
+#== On Table Edit
+#index table のon cell で修正ができる。mode無しと mode有りがある
 #
-# Tumiki が提供する indedx.html.erb がある。独自のview を用いる場合は
-# Tumiki が提供する indedx.html.erbを参考に設定していただくのがよい
-#  
-# === Tumiki が提供する indedx.html.erbを使う場合
-# column の editable option と actionで設定する @on_table_edit の値で管理する。
-#
+#Tumiki が提供する indedx.html.erb がある。独自のview を用いる場合は
+#Tumiki が提供する indedx.html.erbを参考に設定していただくのがよい
 # 
-# ==== @on_table_edit
-# nill,false :: editable option に関わらず常に編集不能
-# :all       :: index にて editable なcellが編集可能になる。forcusが外れたとき(type=text)もしくはデータに変更が有った時(type=radio,checkbox、select)にDBに反映される。
-# :edit :: index では編集不能。編集ボタンが表示され、それで編集modeになる。
-# :add :: index では編集不能。編集ボタンと追加ボタンが表示され、それで編集modeになる。
-# :editting  :: editable なcellが編集可能になる。更新ボタンが表示され押すと更新される
-#
-# ==== editable option
-# editable の評価がtrueなら編集可能となる。
-# * column :name, editable: true :: name 欄は常に編集可能
-# * column :cost, editable: :enable :: model.send(:enable) の結果による
-# * column :name, editable: lambda{|m| m.enable} :: lambda の結果による
-# 
-# === Tumiki が提供する indedx.html.erbを＊＊ 使わない ＊＊場合
-# editable option の働きは同じである。一覧での編集可否はview、helperで決まる。
-# 
-# ==== TumikiHelper
-# * tumiki_index_table(columns, models) を用いて一覧表を表示すると、一覧表は同じ動きとなる。
-# * tumiki_edit_on_table_buttom を呼ぶと @edit_on_table の値に応じて 追加,編集,更新 ボタンが表示される。
-# ==== mode有りOn Table Edit
-# @edit_on_table の値によって、modeが変わる
-# nil, false, 未定義 :: mode無の onTabelEdit となる。
-# :edit :: 編集可能画面となる。<%= tumiki_edit_on_table_buttom %> を呼ぶと
-# 更新buttomが表示される。
-# 以外 :: 編集不可な画面。<%= tumiki_edit_on_table_buttom %> を呼ぶと
-# 編集buttomが表示される。
-#
-# * controllerに edit_on_table, update_on_tableを用意する。
-# * index, edit_on_table に共通な column 宣言が必要なので、Controller に
-# method index_columns を用意するのを薦める。
-#
-# ===== edit_on_table
-# method index_columns index_relation を使ったdefaultな methodが module Tumiki
-# に用意されている。必要によりover rideを。
-# 
-# ===== update_on_table
-
-# method index_columns を使ったdefaultな methodが module Tumiki
-# に用意されている。必要によりover rideを。
-# 
-#
-# ==== mode無し On Table Edit
-# * controllerにmethod on_cell_edit を用意する。
-# * tumiki.coffee が必要
-# 
-# * 入力を select, radio buttom, check box で行いたい場合は、as optionをつける。
-# 無い場合は、type=text な入力となる。 
+#=== Tumiki が提供する indedx.html.erbを使う場合
+#column の editable option と actionで設定する @on_table_edit の値で管理する。
 #
 #
-# === option 一覧
-# ==== TH関連
-# label: 無いと symbolが使われる
-# order: thにソートリンクを作る。labelと併用可
+#==== @on_table_edit
+#nill,false :: editable option に関わらず常に編集不能
+#:all       :: index にて editable なcellが編集可能になる。forcusが外れたとき(type=text)もしくはデータに変更が有った時(type=radio,checkbox、select)にDBに反映される。
+#:edit :: index では編集不能。編集ボタンが表示され、それで編集modeになる。
+#:add :: index では編集不能。編集ボタンと追加ボタンが表示され、それで編集modeになる。
+#:editting  :: editable なcellが編集可能になる。更新ボタンが表示され押すと更新される
 #
-# ==== TD
-# correction: 表示にあたって、データ変換が必要な場合
-# as:  　　 :select, :radio,:checkbox。  :correction オプションが必要
-# format:　 データを整形する。　日時関連の項目の場合、klass: :date_timeも必要
-# link:     リンクを貼る
-# editable:  編集可能にする
-# text_size: text_fieldの幅。bootstrapが無い場合のsize=XXの場合の値を用いる 
+#==== editable option
+#editable の評価がtrueなら編集可能となる。
+#* column :name, editable: true :: name 欄は常に編集可能
+#* column :cost, editable: :enable :: model.send(:enable) の結果による
+#* column :name, editable: lambda{|m| m.enable} :: lambda の結果による
+#
+#=== Tumiki が提供する indedx.html.erbを＊＊ 使わない ＊＊場合
+#editable option の働きは同じである。一覧での編集可否はview、helperで決まる。
+#
+#==== TumikiHelper
+#* tumiki_index_table(columns, models) を用いて一覧表を表示すると、一覧表は同じ動きとなる。
+#* tumiki_edit_on_table_buttom を呼ぶと @edit_on_table の値に応じて 追加,編集,更新 ボタンが表示される。
+#==== mode有りOn Table Edit
+#@edit_on_table の値によって、modeが変わる
+#nil, false, 未定義 :: mode無の onTabelEdit となる。
+#:edit :: 編集可能画面となる。<%= tumiki_edit_on_table_buttom %> を呼ぶと
+#更新buttomが表示される。
+#以外 :: 編集不可な画面。<%= tumiki_edit_on_table_buttom %> を呼ぶと
+#編集buttomが表示される。
+#
+#* controllerに edit_on_table, update_on_tableを用意する。
+#* index, edit_on_table に共通な column 宣言が必要なので、Controller に
+#method index_columns を用意するのを薦める。
+#
+#===== edit_on_table
+#method index_columns index_relation を使ったdefaultな methodが module Tumiki
+#に用意されている。必要によりover rideを。
+#
+#===== update_on_table
+#
+#method index_columns を使ったdefaultな methodが module Tumiki
+#に用意されている。必要によりover rideを。
+#
+#
+#==== mode無し On Table Edit
+#* controllerにmethod on_cell_edit を用意する。
+#* tumiki.coffee が必要
+#
+#* 入力を select, radio buttom, check box で行いたい場合は、as optionをつける。
+#無い場合は、type=text な入力となる。 
+#
+#
+#=== option 一覧
+#==== TH関連
+#label: 無いと symbolが使われる
+#order: thにソートリンクを作る。labelと併用可
+#
+#==== TD
+#correction: 表示にあたって、データ変換が必要な場合
+#as:  　　 :select, :radio,:checkbox。  :correction オプションが必要
+#format:　 データを整形する。　日時関連の項目の場合、klass: :date_timeも必要
+#link:     リンクを貼る
+#editable:  編集可能にする
+#text_size: text_fieldの幅。bootstrapが無い場合のsize=XXの場合の値を用いる 
 #
 module Tumiki
   extend ActionView::Helpers::FormOptionsHelper
   attr_reader :columns
   
 
-  # controller名から /s?Controller/ を取ったものが model名では無い場合は
-  # over ride する
+  # # controller名から /s?Controller/ を取ったものが model名では無い場合は
+  # # over ride する
   def model_class
     @Modle ||= eval(self.class.name.sub(/s?Controller/,""))
   end
 
-
+  #表示attrを定義する。model Columnのインスタンスを作り、配列に格納する
+  # column :symbol_of_attr,label: "LABEL", as: :radio, correction: [],,,,
+  #hashパラメータの詳細は Column#initialize 参照
+  #
+  #arg_columns:: 無指定時は @columnsが使われる。指定時はそれが使われる
+  #@edit_on_table:: column実行時の値で動きが変わる。
+  #   :: 詳細は  Column#disp,Column#edit等を参照
   def column symbol,args={},arg_columns=nil
     columns = arg_columns ? arg_columns : ( @columns ||=  [] )
     args[ :edit_on_table ] ||= @edit_on_table
     columns << Column.new( self, @Domain, symbol,params,args)
   end
 
+  #
   # preset :: 初期の内容　{ symbol: value }
   # * arg
   # ** :label
@@ -436,9 +502,14 @@ module Tumiki
     params[:order] ? ["#{params[:order]} #{params[:asc]}",@default_order].compact.join(",") : @default_order
   end
   
-
+  #controllerのTumikiが用意しているmethodを使うために必要なインスタンス変数を
+  #定義するための拡張
    module ApplicationControllerExtension
-  
+     #以下の変数を定義する
+     #@Model::controller名から作成。 Tumiki::SamplesController => Tumiki::Sample
+     #@Domain ::モデル名から作成。viewでのname、id作成に用いる  tumiki/sample
+     #@ModelPathBase::モデル名から作成。show,editなどのroute。 tumiki/sample_path
+     #@CorrectionPath::モデル名から作成。indexなどのroute。 tumiki/samples_path
      def tumiki_instanse_variable
        begin
          @Model = eval(self.class.name.sub(/s?Controller/,""))

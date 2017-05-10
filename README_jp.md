@@ -7,14 +7,18 @@ controller,viewの実装のRDYを目指して居ます。
 
 ## 何ができるか
 
-* #indexのtableのカラムの定義、その順番の変更を容易にします
-** 表示方法は、通常のto_s表示のほか、format指定、radio bottum、
-check box text_areaが選べます。
-** 一覧表の状態で編集するmode（#edit_on_table)を可能にします
-** 一覧表編集の入力形式は更にselectも選べます。
-** 編集可能なカラムを指定できます。td 毎に可否を設定することも可能です
+### indexのtableのカラムの定義、その順番の変更を容易にします
+
+ * 表示方法は、通常のto_s表示のほか、format指定、radio bottum、
+select check box text_areaが選べます。
+
+ * 一覧表の状態で編集するmode（#edit_on_table)を可能にします
+
+ * 編集可能なカラムを指定できます。td 毎に可否を設定することも可能です
+ 
 * tableでカラムソートを行わせることができます
-* #indexでの絞り込みができます。
+
+* indexでの絞り込みをサポートします
 
 
 ## Installation

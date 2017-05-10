@@ -6,9 +6,76 @@ require 'tumiki/as_radio'
 require 'tumiki/as_select'
 require 'tumiki/klass_date_time'
 module Tumiki
-=begin
-
-=end
+  # 
+  # Tumiki::Columnは表示attribute毎に定義し、以下を提供する
+  # 表示、編集での表現のサポート
+  # 一覧表でのカラムソートの機能
+  # 
+  # 表示、編集での表現のサポート
+  #
+  # 1.label 
+  #
+  # -indexなどでの一覧表の th に用いる label
+  #
+  # -show, edit などでの label for などに用いる label
+  # 
+  # column.label mode として用いる。modeは 無し, :i18n, :for, :for_i18n の4種
+  # 
+  # 1. disp
+  #
+  # 値の表示
+  #
+  # column.disp(model) として用いる。option :as, :text, :format, :link, 
+  # :editable と、 columnを定義した時の @edit_on_table によって、
+  # 単純な to_s、formatによる整形、他pageへのlink、disableなラジオボタン、
+  # checkbox、select などになる。
+  # 
+  # 1. edit :: 編集可能な表示
+  #   column.edit(model) として用いる。option :as, :text, :format, :link, 
+  #   :editable と、 columnを定義した時の @edit_on_table によって、
+  #   typeが text, radio, checkbox, aria, hidden な inputやselect になる。
+  #   radio button の場合、button label(があれば)に label for を被せる。
+  #   
+  # 4.
+  # edit_form :: 一覧表での編集可能な表示
+  #   column.edit_form(model) として用いる。
+  # 
+  #   editとの違いは、name、id に　model.id が追加されることである。
+  #      name="domain[id][attr]",  id="domain_id_attr"
+  #   これにより、一覧表での編集が可能になる。
+  # 
+  #   model が編集可能な状態であり、かつ attr も編集可能である場合に編集状態に
+  #   なる。column定義時に @edit_on_table が :editting であると disable=falseと
+  #   なる。:on_cell の場合 disable であるが、tumiki.js との連携で、double click
+  #   でenableとなる。前者を EditOnTable mode、後者を OnCellEdit mode と読んでいる。
+  #   前者は[更新]action(#update_on_table)で DB に反映される。後者はcellの
+  #   修正毎に DB に反映される。
+  #   
+  # 5. 
+  # 編集可能の判断
+  #   column の :editable option の内容によって動きが変わる。
+  #   column#editable?(model)で評価される。
+  # 
+  #   無指定 :: 編集不能
+  #   true   :: 編集可能
+  #   Symbon :: model.send(editable) の結果による
+  #   Proc   :: editable.call(model) の結果による
+  # 
+  #   current_user の権限で判定が変わる場合は、Proc の中で current_userを
+  #   参照すればよい。
+  # 
+  # 
+  # 一覧表でのカラムソートの機能(要:tumiki_helper#tumiki_index_table_th)
+  #   option :order が定義されていると、th がカラムソートのlinkとなる。
+  #   昇順降順の表示に font-awesome を用いれいるので gem 'font-awesome-rails'
+  #   が必要となる。
+  #     order:  :asc :: 最初のクリックで 昇順、次で降順、次に昇順となる
+  #     order:  :desc :: 最初のクリックで 降順、次に昇順、次に降順となる
+  # 
+  # その他のoption
+  #  :text_size  :: text_field, select の入力幅を指定する。 text_size 20
+  #  :align      :: disp の時の水平方向配置  align: :right,:center
+  #  :include_blank :: select の時の空白許可  include_blank: true
   class Column
     include  ActionView::Helpers::UrlHelper
     include  ActionView::Helpers::UrlHelper
