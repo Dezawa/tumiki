@@ -1,5 +1,7 @@
 # Tumiki
 
+NOT YET WRITTEN
+
 Welcome to your new gem!
 This package helps your Rails applications,
 to 
