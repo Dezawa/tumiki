@@ -281,7 +281,6 @@ module Tumiki
   def filter symbol,preset={},args={}
     @filter_list ||= []
     @filter_list << Filter.new(@Model,symbol,preset,args)
-    #pp  @filter_list
   end
 
   # index_columns の over ride 必須
@@ -367,7 +366,7 @@ module Tumiki
     @edit = true
     @edit_on_table = :editting
     index_columns
-    @models = relation #index_relation.order(order_params)
+    @models = relation
     if (@add_no = params[:add_no].to_i) >0
       @models += new_models
     end
