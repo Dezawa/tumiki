@@ -4,6 +4,7 @@
 
 == ご案内はまだ未完成です。ご興味ある方はご連絡ください
 
+
 このパッケージは Rails application のための gem です。
 controller,viewの実装のRDYを目指して居ます。
 
