@@ -461,7 +461,10 @@ module Tumiki
   end
   
   def index_columns
-    @columns ||=  []
+    return @columns if @columns # ||=  []
+    @Model.column_names.each{|clm|
+      column clm.to_sym
+    }
   end
   def new_columns
     @columns = nil # @columns ||=  []
