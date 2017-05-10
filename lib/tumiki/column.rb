@@ -90,14 +90,13 @@ module Tumiki
        :format, :text_size,:align,  # 表示形式に関わる option
        :order,                      # indexの時のカラムソート関連
        :correction, :include_blank, # as: :radio, :select の関連
-       :option, :path ,
+       :option,
        :td_option, :tr_option,
-       :asc,
        :help, :comment
       ]
     AttrAccessor = [ :edit_on_table, :editable, :klass ]
     
-    attr_reader *AttrReader
+    attr_reader  :asc,:path ,*AttrReader
     attr_accessor *AttrAccessor
     
     KlassModules = { date_time: KlassDateTime }

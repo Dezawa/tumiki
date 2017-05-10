@@ -25,28 +25,77 @@ RSpec.describe Tumiki, :type => :controller do
   
   ### Select ##
   describe "Select" do
-    describe "as があるが text: true" do
+    describe "text: trueの時" do
       before do
         [5,6].each{|c| @controller.columns[c].text = true }
       end
-      it "select" do
-        @block.col1 = 1 #1
-        expect(@controller.columns[5].edit_field(@block)).to eq 'select1'
+      describe "editableもediton_tableも未定義だとString" do
+        it "初期値 1" do
+          @block.col1 = 1 #1
+          expect(@controller.columns[5].edit_field(@block)).to eq 'select1'
+        end
+        it "初期値 select1" do
+          @block.col1 = "select1" #1
+          expect(@controller.columns[6].edit_field(@block)).to eq 'select1'
+        end
       end
-      it "radio correction=>[val,val]" do
-        @block.col1 = "select1" #1
-        expect(@controller.columns[6].edit_field(@block)).to eq 'select1'
+      describe "editable true,edit_on_table edditingだとEnable" do
+        before do
+          [5,6].each{|c| @controller.columns[c].editable = true }
+          [5,6].each{|c| @controller.columns[c].edit_on_table = :editting }
+        end
+        it "初期値 未定義" do
+          expect(@controller.columns[5].edit_field(@block)).
+          to eq SelectFormEnableWithID%[0,NotChecked,1]
+        end
+        it "初期値 1" do
+          @block.col1 = "select1" #1
+          expect(@controller.columns[6].edit_field(@block)).
+          to eq SelectFormEnableWithID%["select0",Selected,"select1"]
+        end
+      end
+      describe "editable trueでもedit_on_tableが editだとString" do
+        before do
+          [5,6].each{|c| @controller.columns[c].editable = true }
+          [5,6].each{|c| @controller.columns[c].edit_on_table = :edit }
+        end
+        it "初期値 未定義" do
+          expect(@controller.columns[5].edit_field(@block)).
+          to eq "" #SelectFormDisabledWithID%[0,NotSelected,1]
+        end
+        it "初期値 1" do
+          @block.col1 = "select1" #1
+          expect(@controller.columns[6].edit_field(@block)).
+          to eq "select1" #SelectFormDisabledWithID%[0,Selected,1]
+        end
+      end
+      describe "editable trueでもedit_on_tableが on_cellだとDisable" do
+        before do
+          [5,6].each{|c| @controller.columns[c].editable = true }
+          [5,6].each{|c| @controller.columns[c].edit_on_table = :on_cell }
+        end
+        it "初期値 未定義" do
+          expect(@controller.columns[5].edit_field(@block)).
+          to eq SelectFormDisabledWithID%[0,NotSelected,1]
+        end
+        it "初期値 1" do
+          @block.col1 = "select1" #1
+          expect(@controller.columns[6].edit_field(@block)).
+          to eq SelectFormDisabledWithID%["select0",Selected,"select1"]
+        end
       end
     end
     
-    it 'edit select 初期値なし' do
-      expect(@controller.columns[5].edit_field(@block)).
-        to eq SelectFormEnableWithID%[0,"",1]
-    end
-    it 'edit select 初期値 1' do
-      @block.col1 = 1
-      expect(@controller.columns[5].edit_field(@block)).
-        to eq SelectFormEnableWithID%[0,'selected="selected" ',1]
+    describe "text: なし" do
+      it 'editableもediton_tableも未定義だと Disabele初期値なし' do
+        expect(@controller.columns[5].edit_field(@block)).
+          to eq SelectFormDisabledWithID%[0,"",1]
+      end
+      it 'edit select 初期値 1' do
+        @block.col1 = 1
+        expect(@controller.columns[5].edit_field(@block)).
+          to eq SelectFormDisabledWithID%[0,'selected="selected" ',1]
+      end
     end
     
     describe "@edit_on_table == :on_cell" do

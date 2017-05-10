@@ -1,7 +1,9 @@
 # coding: utf-8
 module Tumiki
   class Filter
-    attr_reader :model, :symbol,:label,:as, :value,:type,:option
+    
+    AttrReader = [ :label,:as,:collection,:query_type ]
+    attr_reader :model, :symbol,:type, :value, :option,*AttrReader
     #include ActionView::Helpers::TagHelper
     include ActionView::Helpers::FormTagHelper
     include ActionView::Helpers::OutputSafetyHelper
@@ -45,28 +47,18 @@ module Tumiki
     def initialize model,symbol,preset,args = {}
       @model = model
       @symbol = symbol
-      @label  = args[:label] || @symbol.to_s
-      @as     = args[:as]    || :text
       @value  = preset[symbol]&&preset[symbol][:value]
       @type   = preset[symbol]&&preset[symbol][:type] || "一致"
+      @klass  = args.delete(:klass) 
+      AttrReader.each{|sym|
+        instance_variable_set("@#{sym}", args.delete(sym) )
+      }
+      @label  ||= @symbol.to_s
+      @as     ||= :text
+      @klass  ||= ""
       @option = args
     end
 
-    #label
-    #<div class="string input optional stringish filter_form_field filter_string select_and_search" id="q_dbid_input">
-    #<label for="q_dbid" class="label">Dbid</label>
-    #
-    # query type
-    #<select name="" id="">
-    #  <option selected="selected" value="dbid_contains">Contains</option>
-    #  <option value="dbid_equals">Equals</option>
-    #  <option value="dbid_starts_with">Starts with</option>
-    #  <option value="dbid_ends_with">Ends with</option>
-    #</select>
-    #
-    # input
-    #<input maxlength="255" id="q_dbid" type="text" name="q[dbid_contains]" />
-    #</div>
     FormDivClass = "string input optional stringish filter_form_field "+
                    "filter_string select_and_search"
     def disp
@@ -87,36 +79,32 @@ module Tumiki
     #as が :radio, :select, :match の場合は表示不要なので空文字列
     def disp_query_type_select
       case as
-      when :radio, :select ;" "
+      when :radio, :select, :match ;" "
       else
-        if option[:query_type] ;  option[:query_type]
-        else
-          select_tag("query[#{symbol}][type]",
-                     options_for_select( FormQueryType,type),class: "fl"
-                    )
-        end
+        query_type || select_tag("query[#{symbol}][type]",
+                                 options_for_select( FormQueryType,type),
+                                 class: klass("fl")
+                                )
       end
     end
+
+    #絞り込み条件を入力するinputを出力する。
     def disp_input
       case as
       when :radio
         select_tag("query[#{symbol}][value]",
-                 options_for_select(option[:collection],value)
+                 options_for_select(collection,value)
                   )
       when :select
         select_tag("query[#{symbol}][value]",
-                   options_for_select(option[:collection],value),
-                   include_blank: true,class: "select-#{symbol}"
+                   options_for_select(collection,value),
+                   include_blank: true,
+                   class: klass("select-#{symbol}")
                   )
-        # pp self.symbol
-        # collection_radio_buttons(
-        #   :query,
-        #   symbol,
-        #   option[:collection],
-        #   value, "")
       else
         text_field_tag("query[#{symbol}][value]",value,
-                       id: "q_#{symbol}",size: 5,class: "form-control input-sm fl")
+                       id: "q_#{symbol}",size: 4,
+                       class: klass("form-control input-sm fl"))
       end
     end
     
@@ -133,6 +121,9 @@ module Tumiki
         when "後方" ;  model.arel_table[symbol].matches("%#{value}")
         end
       end
+    end
+    def klass kls=""
+      [@klass,kls].join(" ")
     end
   end
 

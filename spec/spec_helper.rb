@@ -90,6 +90,8 @@ SelectFormEnableWithID   = ('<select' + select_com).gsub(/#ID#/,"[123]").gsub(/#
 
 checkbox = "<input type=\"checkbox\" name=\"block#ID#[col1]\" id=\"block_#id#col1\" value=\"%s\" "
 
+Selected = 'selected="selected" '
+NotSelected = ''
 Checked = 'checked="checked" '
 NotChecked = ""
 CheckBoxDisabled = (checkbox + "disabled=\"disabled\" %s/>").gsub(/#ID#/,"").gsub(/#id#/,"")
