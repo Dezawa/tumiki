@@ -223,31 +223,31 @@ module Tumiki::Helper
   end
 
   #################33
-  
-
   def  filtering_bootstrap filter_list
     return "" unless filter_list
-    safe_join(
-      [form_tag({action: :index},method: :get),
-       content_tag("div ",submit_tag( "絞込"),class: "fl"),
-       content_tag("div",class: "fl"){
-         safe_join( filter_list.map{|filter|
-                      content_tag("div",class: "fl"){
-                        content_tag("table",class: "fl"){
-                          content_tag("tr"){
-                            safe_join( [content_tag("td",filter.label),
-                                       content_tag("td",filter.disp_query_type_select),
-                                       content_tag("td",filter.disp_input)]
-                                     )
-                          }
-                        }
-                      }
-                    },
-                    "\n"
-                  )
-       },
-       "</form>".html_safe
-      ].flatten.compact,"\n")
+    
+    form_tag({action: :index},method: :get) do
+      safe_join(
+        [ *hiddens_from_parms([:query]) ,
+          content_tag("div ",submit_tag( "絞込"),class: "fl"),
+          content_tag("div",class: "fl"){
+            safe_join( filter_list.map{|filter|
+                         #content_tag("div",class: "fl"){
+                         content_tag("table",class: "fl"){
+                           content_tag("tr"){
+                             safe_join( [content_tag("td",filter.label),
+                                         content_tag("td",filter.disp_query_type_select),
+                                         content_tag("td",filter.disp_input)]
+                                      )
+                           }
+                         }
+                         #}
+                       },
+                       "\n"
+                     )
+          }
+        ].compact.flatten.compact,"\n").html_safe
+    end
   end
 
   def  filtering filter_list
@@ -268,7 +268,12 @@ module Tumiki::Helper
       )
     }
   end
-
+  def hiddens_from_parms(symbols)
+    return nil if (selected = select_params(symbols)).empty?
+    url_for( {action: :index}.merge(selected))[/\?(.*)/,1].
+      split("&").
+      map{|args| hidden_field_tag( *args.split("="))}
+  end
   def pagenation(models)
     unless @Pagenation && [ nil, false, :edit,:add].include?(@edit_on_table)
       ""
