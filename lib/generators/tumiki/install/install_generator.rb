@@ -9,10 +9,10 @@ module Tumiki
       orig =
         File.join Rails.root , %w(app controllers application_controller.rb)
       code = File.read(orig)
-      reg_require = %r(^\s*include +Tumiki::ApplicationControllerExtension\s*#*$)
+      reg_require = %r(^\s*include +Tumiki::ApplicationControllerExtensionTumiki\s*#*$)
       reg_replace =  /^\s*class +ApplicationController.*$/
       str_replace = "class ApplicationController < ActionController::Base\n" +
-                    "  include Tumiki::ApplicationControllerExtension\n" +
+                    "  include Tumiki::ApplicationControllerExtensionTumiki\n" +
                     "  before_filter :tumiki_instanse_variable\n"
       return if reg_require =~ code
       code = rep_code( code,reg_replace,str_replace)
@@ -49,6 +49,15 @@ module Tumiki
       FileUtils.mkdir_p dist
       FileUtils.cp views,dist
       puts "Copy or Over write views into app/views/application/*erb"
+    end
+    def copy_assets
+      src_dir =
+        File.expand_path("../../../../../app/assets/javascripts", __FILE__)
+      assets = Dir.glob(src_dir + "/*.{js,coffee}")
+      dist = Rails.root + "app" + "assets" + "javascripts"
+      FileUtils.mkdir_p dist
+      FileUtils.cp assets,dist
+      puts "Copy or Over write javascripts into app/assets/javascripts"
     end
 
     private
