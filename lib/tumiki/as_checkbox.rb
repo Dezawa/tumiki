@@ -29,10 +29,12 @@ module Tumiki
         # when true ; []
         # when :check_only ;[[nil,1],[nil,0]]
         # else ; option[:correction]
-        # end
+      # end
       value,key = valu_key.first
       safe_join([check_box_tag( name(model,with_id), key,
-                                model.send(symbol) == key||model.send(symbol).to_s == key,
+                                model.send(symbol) == key||
+                                model.send(symbol).to_s == key ||
+                                model.send(symbol).is_a?(TrueClass) ,
                                 disabled:  bool),
                  valu_key.map{|v,k| v}.compact.join("/")
                 ])

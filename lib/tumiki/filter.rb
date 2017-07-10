@@ -2,7 +2,7 @@
 module Tumiki
   class Filter
     
-    AttrReader = [ :label,:as,:collection,:query_type ]
+    AttrReader = [ :label,:as,:collection,:query_type,:format ]
     attr_reader :model, :symbol,:type, :value, :option,*AttrReader
     #include ActionView::Helpers::TagHelper
     include ActionView::Helpers::FormTagHelper
@@ -102,12 +102,21 @@ module Tumiki
                    class: klass("select-#{symbol}")
                   )
       else
-        text_field_tag("query[#{symbol}][value]",value,
+        str = to_s_by_format(value)
+        text_field_tag("query[#{symbol}][value]",str,
                        id: "q_#{symbol}",size: 4,
                        class: klass("form-control input-sm fl"))
       end
     end
     
+    def to_s_by_format(val)
+      return val.to_s unless format
+      if val.respond_to?(:strftime)
+        val.strftime(format)
+      else
+        val ? format % val : ""
+      end.html_safe
+    end
     def to_arel
       return nil if value.blank?
       case as

@@ -44,7 +44,7 @@ module Tumiki::Helper
         when Integer   
           next unless firstline
           (1..style).each{
-            row += "<td rowspan=#{ary_of_list.size+1}>#{labels[lbl_idx].label}</td>"
+            row += "<td rowspan=#{ary_of_list.size+1}>#{labels[lbinl_idx].label}</td>"
             lbl_idx += 1
           }
         when  Array; 
@@ -63,7 +63,7 @@ module Tumiki::Helper
       when Integer   ;        lbl_idx += style
       when Array; 
         (1..style[0]).each{
-          row += "<td>#{labels[lbl_idx].label}</td>" if labels[lbl_idx]
+          row += "<td>#{labels[lbl_idx].label }</td>" if labels[lbl_idx]
           lbl_idx += 1
         }
       end
@@ -79,7 +79,7 @@ module Tumiki::Helper
               "desc" =>  "fa fa-sort-desc",
               "asc" =>   "fa fa-sort-asc",
             }
-  def tumiki_index_table_th label
+  def tumiki_index_table_th label,mode: nil
     return nil if label.as == :hidden
     if label.order
       url_option = params.merge(order: label.symbol,asc: label.next_asc)
@@ -87,7 +87,7 @@ module Tumiki::Helper
       url_option.delete("controller")
       content_tag("th",class: "text-center bg-success"){
         link_to(
-          "<span>#{label.label}<i class='#{AecIcon[label.asc]}'></i></span>".html_safe,
+          "<span>#{label.label mode}<i class='#{AecIcon[label.asc]}'></i></span>".html_safe,
           url_option
         )
       }
@@ -152,7 +152,8 @@ module Tumiki::Helper
   end
   def tumiki_index_table_td  label, model
     #puts model.send label.symbol
-    option = label.td_option.dup
+      pp [ "######### tumiki_index_table_td td_option ##############",label.td_option(model)]
+    option = label.td_option(model) || {}
     editable_option = @editable ? label.editable_option(model) : {}
     option[:class]  = [option[:class],
                        editable_option.delete(:class)
@@ -162,6 +163,7 @@ module Tumiki::Helper
     if label.as == :hidden
      label.edit(model,true)
     else
+      pp [ "################ tumiki_index_table_td ##############################",option]
       content_tag("td",option){ label.disp_text model }
     end
   end
@@ -225,7 +227,7 @@ module Tumiki::Helper
   #################33
   def  filtering_bootstrap filter_list
     return "" unless filter_list
-    
+    pp ["filter_list",filter_list]
     form_tag({action: :index},method: :get) do
       safe_join(
         [ *hiddens_from_parms([:query]) ,
@@ -314,8 +316,10 @@ module Tumiki::Helper
   end
   def select_params(symbols=[])
     param = params.dup
+    #pp [:select_params,param]
     [:utf8, :commit ,:controller ,:action,@Domain].each{|sym| param.delete(sym)}
     symbols.each{|sym| param.delete(sym)}
+    #pp param
     param
   end
   def  filtering filter_list

@@ -26,7 +26,7 @@ module Tumiki
   # 値の表示
   #
   # column.disp(model) として用いる。option :as, :text, :format, :link, 
-  # :editable と、 columnを定義した時の @edit_on_table によって、
+  # :editable、 columnを定義した時の @edit_on_table によって、
   # 単純な to_s、formatによる整形、他pageへのlink、disableなラジオボタン、
   # checkbox、select などになる。
   # 
@@ -91,7 +91,7 @@ module Tumiki
        :order,                      # indexの時のカラムソート関連
        :correction, :include_blank, # as: :radio, :select の関連
        :option,
-       :td_option, :tr_option,
+       :tr_option,
        :help, :comment
       ]
     AttrAccessor = [ :edit_on_table, :editable, :klass ]
@@ -104,6 +104,7 @@ module Tumiki
                   area:   AsArea, hidden: AsHidden}
     
     def initialize controller,domain, symbol,params,args = {}
+      #pp [:column, args[:editable]]
       @controller, @domain, @symbol, @params =
                                      controller, domain, symbol, params
       extend ActionView::Helpers::FormOptionsHelper
@@ -113,9 +114,9 @@ module Tumiki
       AttrAccessor.each{|sym|
         instance_variable_set("@#{sym}", args.delete(sym) )
       }
-      @editable   ||=  true
+      @editable =  true if @editable.is_a? NilClass
       @as         ||=  :text
-      @td_option  ||=  {}
+      @td_option  = args.delete(:td_option) || {}
       #@text_size  ||=  15
       action  = args.delete(:action)
       if @correction && !@correction.first.is_a?(Array)
@@ -149,7 +150,10 @@ module Tumiki
        str =
          case mode
          when :i18n, :for_i18n ; I18n.t(symbol)
-         else       ; @label || symbol.to_s.classify
+         else
+           if  @label == :i18n ; I18n.t(symbol)
+           else                ; @label || symbol.to_s.classify
+           end
          end
 
        case mode
@@ -198,6 +202,7 @@ module Tumiki
     #   model の編集可否はcolumn の #editable?  で判定する
     #
     def edit(model,with_id=nil)
+      #pp  editable?(model)
       unless editable?(model)
         disp(model)
       else
@@ -274,6 +279,14 @@ module Tumiki
       ("#{options_to_attr options,'<td'}>" + yield + "</td>").html_safe
     end
 
+    def td_option model=nil
+      case @td_option
+      when Hash ; @td_option.dup
+      when Symbol ; model.send(@td_option)
+      when Proc
+        @td_option.call(model)
+      end
+    end
     def disp_field_with_td(model,on_table_edit=nil)
       td(class: @klass){disp_field(model,on_table_edit) }
     end
@@ -356,6 +369,7 @@ module Tumiki
     #  (2) editable: Proc.new{|model| model.status == "作成"} :: statusで決まる
     #  (3) editable: current_user.editor? && Proc.new{|model| model.status == "作成"} :: status と current_userの資格で決まる
     def editable? model
+      #pp [ :aeg, editable, @editable]
       case editable
       when TrueClass ; true
       when Symbol    ; model.send(editable)

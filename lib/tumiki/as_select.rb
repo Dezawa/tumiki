@@ -3,7 +3,9 @@ require 'pp'
 module Tumiki
   module AsSelect
     def edit_(model,with_id=nil)
-      disable = !(editable?(model) && edit_on_table == :editting)
+      pp editable?(model)
+      disable = !(editable?(model) &&
+                  ( !edit_on_table || edit_on_table == :editting))
       edit_or_disp(model, disable,with_id)
     end
     def disp(model,with_id=nil)

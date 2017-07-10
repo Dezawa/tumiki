@@ -73,7 +73,7 @@ require 'tumiki/query'
 #これらを定義せず、それぞれのactionの中でcolumnを定義しても良い。
 #
 #=== View
-#Tumiki標準のvonntrollerでは、modelのcorrenctionは @models、@modelに格納されて
+#Tumiki標準のcontrollerでは、modelのcorrenctionは @models、@modelに格納されて
 #viewに渡される
 #
 #==== viewで使うmethod
@@ -269,8 +269,10 @@ module Tumiki
   #   :: 詳細は  Column#disp,Column#edit等を参照
   def column symbol,args={},arg_columns=nil
     columns = arg_columns ? arg_columns : ( @columns ||=  [] )
+    args[:editable] = @editable if instance_variable_defined?(:@editable)
     args[ :edit_on_table ] ||= @edit_on_table
     columns << Column.new( self, @Domain, symbol,params,args)
+    #pp ["columns.last",columns.first.editable,columns.last.editable]
   end
 
   #
@@ -280,7 +282,7 @@ module Tumiki
   # ** :as  :text, :radio, :select
   def filter symbol,preset={},args={}
     @filter_list ||= []
-    @filter_list << Filter.new(@Model,symbol,preset,args)
+    @filter_list << Filter.new(@Model,symbol.to_sym,preset,args)
   end
 
   # index_columns の over ride 必須
@@ -417,7 +419,7 @@ module Tumiki
 
       if id < 1
         next if model.values.all?{|v| v == "" }
-        @model=@Model.new(model)
+        @model=model_class.new(model)
         if @model.save 
           new_models << @model
         else
@@ -426,7 +428,7 @@ module Tumiki
         end
       else
         #  unless UbeModel.new(model) == models[id]
-        @mdl = @Model.find(id)
+        @mdl =  model_class.find(id)
         @result &=  @mdl.update(model) # @model.update_attributes(permit_attr)
         @errors << @mdl.errors if @mdl.errors.size>0
         models << @mdl
@@ -438,9 +440,9 @@ module Tumiki
   def index_relation
     # model_class.pagenate(params[:page])
     if @FindWhere
-      @Model.where(@FindWhere)
+      model_class.where(@FindWhere)
     else
-      @Model.all
+      model_class.all
     end
   end
 
@@ -514,7 +516,7 @@ module Tumiki
      #@CorrectionPath::モデル名から作成。indexなどのroute。 tumiki/samples_path
      def tumiki_instanse_variable
        model_class
-       @Model = eval(self.class.name.sub(/s?Controller/,""))
+       @Model ||= eval(self.class.name.sub(/s?Controller/,""))
        plural = ActiveModel::Naming.plural @Model
        @Domain = plural.singularize
        @ModelPathBase  = @Domain+"_path"
