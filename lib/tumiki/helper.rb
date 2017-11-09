@@ -44,11 +44,11 @@ module Tumiki::Helper
         when Integer   
           next unless firstline
           (1..style).each{
-            row += "<td rowspan=#{ary_of_list.size+1}>#{labels[lbinl_idx].label}</td>"
+            row += "<th rowspan=#{ary_of_list.size+1} class='#{labels[lbl_idx].symbol}'>#{labels[lbl_idx].label}</th>"
             lbl_idx += 1
           }
         when  Array; 
-          row += "<td colspan=#{style[0]}>#{style[1]}</td>"
+          row += "<th colspan=#{style[0]} >#{style[1]}</th>"
           lbl_idx += style[0]
         end
       }
@@ -63,7 +63,7 @@ module Tumiki::Helper
       when Integer   ;        lbl_idx += style
       when Array; 
         (1..style[0]).each{
-          row += "<td>#{labels[lbl_idx].label }</td>" if labels[lbl_idx]
+          row += "<th class='#{labels[lbl_idx].symbol}'>#{labels[lbl_idx].label }</th>" if labels[lbl_idx]
           lbl_idx += 1
         }
       end
@@ -85,14 +85,14 @@ module Tumiki::Helper
       url_option = params.merge(order: label.symbol,asc: label.next_asc)
 
       url_option.delete("controller")
-      content_tag("th",class: "text-center bg-success"){
+      content_tag("th",class: "text-center bg-success #{label.symbol}"){
         link_to(
           "<span>#{label.label mode}<i class='#{AecIcon[label.asc]}'></i></span>".html_safe,
           url_option
         )
       }
     else
-      content_tag("th", label.label,class: "text-center bg-success" )
+      content_tag("th", label.label,class: "text-center bg-success #{label.symbol}" )
     end
   end
   
@@ -142,7 +142,7 @@ module Tumiki::Helper
             ) if model
   end
   def deletable?(obj=nil)
-    logger.debug("### deletable #{@Delete} => #{@Delete.call(obj)}") if @Delete.class == Proc
+    #logger.debug("### deletable #{@Delete} => #{@Delete.call(obj)}") if @Delete.class == Proc
     (case @Delete
      when Symbol  ; controller.send(@Delete)
      when Proc    ; @Delete.call(obj)
@@ -152,10 +152,10 @@ module Tumiki::Helper
   end
   def tumiki_index_table_td  label, model
     #puts model.send label.symbol
-      pp [ "######### tumiki_index_table_td td_option ##############",label.td_option(model)]
+      #pp [ "######### tumiki_index_table_td td_option ##############",label.td_option(model)]
     option = label.td_option(model) || {}
     editable_option = @editable ? label.editable_option(model) : {}
-    option[:class]  = [option[:class],
+    option[:class]  = [option[:class],label.symbol.to_s,
                        editable_option.delete(:class)
                       ].flatten.compact.join(" ")
     option[:id] = "#{@Domain}_#{model.id}_#{label.symbol}"
@@ -163,7 +163,7 @@ module Tumiki::Helper
     if label.as == :hidden
      label.edit(model,true)
     else
-      pp [ "################ tumiki_index_table_td ##############################",option]
+      #pp [ "################ tumiki_index_table_td ##############################",option]
       content_tag("td",option){ label.disp_text model }
     end
   end
@@ -227,7 +227,7 @@ module Tumiki::Helper
   #################33
   def  filtering_bootstrap filter_list
     return "" unless filter_list
-    pp ["filter_list",filter_list]
+    #pp ["filter_list",filter_list]
     form_tag({action: :index},method: :get) do
       safe_join(
         [ *hiddens_from_parms([:query]) ,

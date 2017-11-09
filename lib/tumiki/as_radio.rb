@@ -17,7 +17,8 @@ module Tumiki
             #pp id(model,key,with_id)
             safe_join([radio_button_tag( name(model,with_id), key,
                                          model.send(symbol) == key,
-                                         disabled: bool),
+                                         disabled: bool,
+                                         class: klass),
                        content_tag(:label,lbl,for: id(model,key,with_id))]
                      )
           }

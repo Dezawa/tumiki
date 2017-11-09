@@ -356,7 +356,7 @@ module Tumiki
           redirect_to(:action =>  params[:back])
         end
       else
-        redirect_to :action => "index" ,:page => @page
+        redirect_to :action => "show" ,:page => @page
       end
     else
       render action: :edit
